@@ -1,0 +1,51 @@
+name: Build Quarkus GraalVM Native Executable
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up GraalVM
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'graalvm'
+        graalvm-version: '21.3.0'  # Adjust the version as needed
+        java-version: '11'  # Ensure this matches your project requirements
+
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential zlib1g-dev
+
+    - name: Set up GraalVM Native Image
+      run: |
+        gu install native-image
+
+    - name: Build Quarkus Application
+      run: ./mvnw clean package -Pnative
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: native-executable
+        path: target/*-runner
+
+    - name: Upload Native Image
+      uses: actions/upload-release-asset@v1
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: target/*-runner
+        asset_name: quarkus-app
+        asset_content_type: application/octet-stream

@@ -39,10 +39,12 @@ jobs:
         name: native-executable
         path: target/*-runner
 
-    - name: Upload Native Image
-      uses: actions/upload-release-asset@v1
+    - name: Deploy files by SSH
+      uses: appleboy/scp-action@v0.1.4
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: target/*-runner
-        asset_name: quarkus-app
-        asset_content_type: application/octet-stream
+         host: ${{ secrets.SSH_SERVER }}
+         username: ${{ secrets.SSH_LOGIN }}
+         password: ${{ secrets.SSH_PASSWORD }}
+         port: ${{ secrets.SSH_PORT }}
+         source: target/*-runner
+         target: /home/infrastructure_test
